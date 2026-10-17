@@ -1,9 +1,6 @@
 package ru.practicum.moviehub.model;
 
 import com.google.gson.Gson;
-
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;

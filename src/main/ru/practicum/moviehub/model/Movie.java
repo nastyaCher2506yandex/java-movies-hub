@@ -1,7 +1,5 @@
 package ru.practicum.moviehub.model;
 
-import java.time.LocalDate;
-
 //класс отвечает за представляение фильма (информация о нем)
 public class Movie {
 
