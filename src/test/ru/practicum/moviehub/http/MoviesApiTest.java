@@ -701,7 +701,7 @@ public class MoviesApiTest {
 
         String body = resp.body().trim();
 
-        ErrorResponse error= gson.fromJson(body,ErrorResponse.class);
+        ErrorResponse error = gson.fromJson(body,ErrorResponse.class);
 
         assertEquals("Некорректный параметр запроса — 'year'", error.getError(),"Должна вылезти ошибка некореектный year");
     }
