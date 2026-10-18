@@ -32,6 +32,7 @@ public abstract class BaseHttpHandler implements HttpHandler {
             os.write(bytes);
         }
     }
+
     //функция, которая выводит ошибки
     protected void sendError(HttpExchange ex, int status, String message, String details) throws IOException {
         ErrorResponse errorResponse;
