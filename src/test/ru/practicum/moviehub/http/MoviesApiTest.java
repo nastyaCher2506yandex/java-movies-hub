@@ -375,7 +375,7 @@ public class MoviesApiTest {
 
         //проверяем, что это объект
         assertEquals(1,details.length,"Деталь одна, что неправильный json");
-        assertEquals("некорректный json", details[0]);
+        assertEquals("отсутствует обязательное поле", details[0]);
     }
 
     //когда одна переменная не указана
@@ -405,7 +405,34 @@ public class MoviesApiTest {
 
         //проверяем, что это объект
         assertEquals(1,details.length,"Деталь одна, что неправильный json");
-        assertEquals("некорректный json", details[0]);
+        assertEquals("отсутствует обязательное поле", details[0]);
+    }
+
+    //когда json передан неправильный
+    @Test
+    void postMovies_whenWrongData_returnErrorJsonWrong() throws Exception {
+        String jsonBody = "[titile=Movie,]";
+
+        HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create(BASE + "/movies"))
+                .POST(HttpRequest.BodyPublishers.ofString(jsonBody, DEFAULT_CHARSET))
+                .headers("Content-Type",CT_JSON)
+                .build();
+
+        HttpResponse<String> resp =
+                client.send(req, HttpResponse.BodyHandlers.ofString(DEFAULT_CHARSET));
+
+        assertEquals(400, resp.statusCode(), "POST /movies должен вернуть 400");
+
+        String contentTypeHeaderValue =
+                resp.headers().firstValue("Content-Type").orElse("");
+        assertEquals(CT_JSON, contentTypeHeaderValue,
+                "Content-Type должен содержать формат данных и кодировку");
+
+        ErrorResponse body = gson.fromJson(resp.body().trim(),ErrorResponse.class);
+
+        //проверяем, что это объект
+        assertEquals("Некорректный json", body.getError());
     }
 
     //GET /movies/{id} возвращает фильм по существующему id
@@ -682,7 +709,7 @@ public class MoviesApiTest {
 
         //строим запрос GET
         HttpRequest req = HttpRequest.newBuilder()
-                .uri(URI.create(BASE + "/movies?year=jbbjj"))
+                .uri(URI.create(BASE + "/movies?year=лвоалов"))
                 .GET()
                 .build();
 

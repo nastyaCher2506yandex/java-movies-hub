@@ -1,8 +1,7 @@
 package ru.practicum.moviehub.http;
 
-import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.sun.net.httpserver.HttpExchange;
-import ru.practicum.moviehub.api.ErrorResponse;
 import ru.practicum.moviehub.model.Movie;
 import ru.practicum.moviehub.model.MoviesStore;
 
@@ -13,11 +12,9 @@ import java.util.Optional;
 public class MoviesHandler extends BaseHttpHandler {
     //создаем хранилище фильмов, которые есть на сервере
     private MoviesStore moviesStore;
-    private Gson gson;
 
     MoviesHandler(MoviesStore moviesStore) {
         this.moviesStore = moviesStore;
-        gson = new Gson();
     }
 
     @Override
@@ -45,7 +42,7 @@ public class MoviesHandler extends BaseHttpHandler {
                 handlePostMovies(ex);
                 break;
             default:
-                sendJson(ex,405,gson.toJson(new ErrorResponse("Такого метода нет")));
+                sendError(ex,405,"Такого метода нет","");
         }
 
     }
@@ -64,7 +61,7 @@ public class MoviesHandler extends BaseHttpHandler {
 
         Optional<Integer> movieIdOpt = getMovieId(ex);
         if (movieIdOpt.isEmpty()) {
-            sendJson(ex,400, gson.toJson(new ErrorResponse("Некорректный ID")));
+            sendError(ex,400, "Некорректный ID","");
             return;
         }
 
@@ -76,14 +73,14 @@ public class MoviesHandler extends BaseHttpHandler {
             }
         }
 
-        sendJson(ex,404, gson.toJson(new ErrorResponse("Фильм не найден")));
+        sendError(ex,404, "Фильм не найден","");
     }
 
     private void handleGetMovieWithYear(HttpExchange ex) throws IOException {
         Optional<Integer> movieYearOpt = getMovieYear(ex);
 
         if (movieYearOpt.isEmpty()) {
-            sendJson(ex,400, gson.toJson(new ErrorResponse("Некорректный параметр запроса — 'year'")));
+            sendError(ex,400, "Некорректный параметр запроса — 'year'","");
             return;
         }
 
@@ -96,7 +93,8 @@ public class MoviesHandler extends BaseHttpHandler {
 
         Optional<Integer> movieIdOpt = getMovieId(ex);
         if (movieIdOpt.isEmpty()) {
-            sendJson(ex,400, gson.toJson(new ErrorResponse("Некорректный ID")));
+
+            sendError(ex,400, "Некорректный ID", "");
             return;
         }
 
@@ -109,14 +107,14 @@ public class MoviesHandler extends BaseHttpHandler {
             }
         }
 
-        sendJson(ex,404, gson.toJson(new ErrorResponse("Фильм не найден")));
+        sendError(ex,404, "Фильм не найден","");
     }
 
     private void handlePostMovies(HttpExchange ex) throws IOException {
         String contentTypeHeaderValue = ex.getRequestHeaders().getFirst("Content-Type");
 
         if (contentTypeHeaderValue == null || !contentTypeHeaderValue.equals(CT_JSON)) {
-            sendJson(ex,415,gson.toJson(new ErrorResponse("Не был указан формат данных и кодировка")));
+            sendError(ex,415, "Не был указан формат данных и кодировка","");
             return;
         }
 
@@ -129,10 +127,11 @@ public class MoviesHandler extends BaseHttpHandler {
             moviesStore.addMovies(body.getTitle().trim(), body.getYear());
             sendJson(ex,201,gson.toJson(moviesStore.getMovie(moviesStore.sizeMovies() - 1)));
         } catch (IllegalArgumentException error) {
-            ErrorResponse errorResponse = new ErrorResponse("Ошибка валидации", gson.fromJson(error.getMessage(),String[].class));
-            sendJson(ex,422,gson.toJson(errorResponse));
-        }  catch (Exception exp) {
-            sendJson(ex,422,gson.toJson(new ErrorResponse("Ошибка валидации", new String[]{"некорректный json"})));
+            sendError(ex,422,"Ошибка валидации",error.getMessage());
+        } catch (NullPointerException error) {
+            sendError(ex,422,"Ошибка валидации", gson.toJson(new String[]{"отсутствует обязательное поле"}));
+        } catch (JsonSyntaxException e) {
+            sendError(ex,400, "Некорректный json","");
         }
     }
 
@@ -180,7 +179,9 @@ public class MoviesHandler extends BaseHttpHandler {
                 return Optional.empty();
             }
             return Optional.of(Integer.parseInt(year[1]));
-        } catch (NumberFormatException exception) {
+        //если значение параметра указано числом или не указано вообще, то отдаем пустой Oprinal
+            //это приведет к ошибке, что некорректный year
+        } catch (NumberFormatException | ArrayIndexOutOfBoundsException exception) {
             return Optional.empty();
         }
     }

@@ -15,8 +15,8 @@ public class MoviesStore {
     private static final int MAX_YEAR = LocalDate.now().getYear() + 1;  //год не может быть больше, чем текущего года + 1
 
     //хранилище фильмов
-    private List<Movie> movies;
-    private Gson gson;
+    private final List<Movie> movies;
+    private final Gson gson;
 
     public MoviesStore() {
         movies = new ArrayList<>();
